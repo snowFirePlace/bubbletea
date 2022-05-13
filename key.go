@@ -522,6 +522,26 @@ func readInputs(input io.Reader) ([]Msg, error) {
 	var runes []rune
 	b := buf[:numBytes]
 
+	// Added support for Cyrillic symbols.
+	var bd []byte
+	for _, bb := range b {
+		var bbb []byte
+		switch {
+		case bb >= 128 && bb <= 175:
+			bbb = []byte{208, bb + 16}
+		case bb == 240:
+			bbb = []byte{208, 129}
+		case bb == 252:
+			bbb = []byte{226, 132, 150}
+		case bb >= 224 && bb <= 239 || bb == 241:
+			bbb = []byte{209, bb - 96}
+		default:
+			bbb = []byte{bb}
+		}
+		bd = append(bd, bbb...)
+	}
+	b = bd
+
 	// Translate input into runes. In most cases we'll receive exactly one
 	// rune, but there are cases, particularly when an input method editor is
 	// used, where we can receive multiple runes at once.
